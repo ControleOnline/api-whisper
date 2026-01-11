@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, UploadFile, Form
+from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -7,7 +8,13 @@ AUDIO_IN = os.path.join(BASE_DIR, "var/audio")
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-app = FastAPI()
+app = FastAPI(
+    title="Whisper Transcription API"
+)
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
 
 @app.post("/transcrip")
 async def transcrip(
