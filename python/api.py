@@ -9,7 +9,7 @@ AUDIO_IN = os.path.join(BASE_DIR, "var/audio")
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 app = FastAPI(
-    title="Whisper Transcription API"
+    title="Controle Online Transcription API"
 )
 
 @app.get("/")
