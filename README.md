@@ -104,6 +104,6 @@ Campos do formulário:
 
 ## Contribuidores
 
-<a href="https://github.com/ControleOnline/api-community/graphs/contributors" target="_blank">
-  <img src="https://contrib.rocks/image?repo=ControleOnline/api-community" />
+<a href="https://github.com/ControleOnline/api-whisper/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=ControleOnline/api-whisper" />
 </a>
