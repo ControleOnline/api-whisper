@@ -3,8 +3,10 @@
 POST /transcrip  (multipart: domain, id, audio) — header X-Whisper-Token required.
 """
 import hmac
+import json
 import os
 import re
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, Header, HTTPException, UploadFile
@@ -12,11 +14,15 @@ from fastapi.responses import RedirectResponse
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 AUDIO_IN = os.path.join(BASE_DIR, "var/audio")
+META = os.path.join(BASE_DIR, "var/meta")
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 WHISPER_TOKEN = os.getenv("WHISPER_TOKEN", "")
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "25"))
+# One instance serves dev, staging and production: each request may say where to deliver the text,
+# but only to these hosts (comma separated).
+CALLBACK_HOSTS = {h.strip().lower() for h in os.getenv("CALLBACK_HOSTS", "").split(",") if h.strip()}
 # Names become paths: only safe characters (no "/", "..", etc.).
 DOMAIN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.:-]{0,190}$")
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -40,12 +46,18 @@ async def transcrip(
     domain: str = Form(...),
     id: str = Form(...),
     audio: UploadFile = Form(...),
+    callback_url: str = Form(default=""),
     x_whisper_token: str = Header(default=""),
 ):
     if not WHISPER_TOKEN or not hmac.compare_digest(x_whisper_token, WHISPER_TOKEN):
         raise HTTPException(status_code=401, detail="invalid token")
     if not DOMAIN_RE.match(domain) or ".." in domain or not ID_RE.match(id):
         raise HTTPException(status_code=400, detail="invalid domain or id")
+
+    if callback_url:
+        parsed = urlparse(callback_url)
+        if parsed.scheme != "https" or (parsed.hostname or "").lower() not in CALLBACK_HOSTS:
+            raise HTTPException(status_code=400, detail="callback host not allowed")
 
     ext = os.path.splitext(audio.filename or "")[1].lower()
     if ext not in EXTENSIONS:
@@ -54,6 +66,10 @@ async def transcrip(
     content = await audio.read(MAX_UPLOAD_MB * 1024 * 1024 + 1)
     if len(content) > MAX_UPLOAD_MB * 1024 * 1024:
         raise HTTPException(status_code=413, detail="audio too large")
+
+    os.makedirs(META, exist_ok=True)
+    with open(os.path.join(META, f"{id}.json"), "w", encoding="utf-8") as f:
+        json.dump({"callback": callback_url}, f)
 
     target_dir = os.path.join(AUDIO_IN, domain)
     os.makedirs(target_dir, exist_ok=True)

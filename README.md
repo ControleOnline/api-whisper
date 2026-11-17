@@ -71,6 +71,7 @@ Veja `.env.sample`:
 | `WHISPER_MODEL` | modelo (`tiny`, `base`, `small`…) — padrão `base` |
 | `WHISPER_IDLE_UNLOAD` | segundos ociosos até liberar o modelo da memória |
 | `MAX_UPLOAD_MB` | tamanho máximo do áudio |
+| `CALLBACK_HOSTS` | hosts aceitos em `callback_url` (uma instância atende dev, staging e produção) |
 
 ---
 
@@ -84,6 +85,7 @@ Veja `.env.sample`:
 
 - `domain`: domínio do app (letras, números, `.`, `:`, `-`)
 - `id`: identificador (letras, números, `_`, `-`)
+- `callback_url` (opcional): para onde enviar o texto; só hosts de `CALLBACK_HOSTS`, https
 - `audio`: arquivo (`webm`, `ogg`, `opus`, `mp3`, `m4a`, `mp4`, `aac`, `wav`, `amr`, `3gp`)
 
 **GET** `/health` → `{"status": "ok"}`

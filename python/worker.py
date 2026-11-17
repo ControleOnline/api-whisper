@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 AUDIO_IN = os.path.join(BASE_DIR, "var/audio")
 TRANSCRIPTED = os.path.join(BASE_DIR, "var/transcripted")
+META = os.path.join(BASE_DIR, "var/meta")
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
@@ -74,8 +75,13 @@ def transcribe(path):
     except Exception as error:  # unreadable audio: report empty text, do not loop on it
         log.warning("transcription failed for %s: %s", path, error)
         text = ""
+    callback = ""
+    meta = os.path.join(META, f"{file_id}.json")
+    if os.path.exists(meta):
+        with open(meta, encoding="utf-8") as f:
+            callback = json.load(f).get("callback", "")
     with open(out + ".part", "w", encoding="utf-8") as f:
-        json.dump({"id": file_id, "domain": domain, "text": text}, f, ensure_ascii=False)
+        json.dump({"id": file_id, "domain": domain, "text": text, "callback": callback}, f, ensure_ascii=False)
     os.replace(out + ".part", out)
     log.info("transcribed %s/%s (%d chars)", domain, file_id, len(text))
 
@@ -85,9 +91,10 @@ def deliver(json_path):
         return
     with open(json_path, encoding="utf-8") as f:
         payload = json.load(f)
+    endpoint = payload.pop("callback", "") or API_ENDPOINT
     headers = {"Content-Type": "application/json", "X-Whisper-Token": CALLBACK_TOKEN, "App-Domain": payload["domain"]}
     try:
-        response = requests.post(API_ENDPOINT, json=payload, headers=headers, timeout=30)
+        response = requests.post(endpoint, json=payload, headers=headers, timeout=30)
         ok = 200 <= response.status_code < 300
     except requests.RequestException as error:
         log.warning("callback error for %s: %s", payload["id"], error)
@@ -99,6 +106,9 @@ def deliver(json_path):
         if os.path.splitext(os.path.basename(path))[0] == payload["id"]:
             os.remove(path)
     os.remove(json_path)
+    meta = os.path.join(META, f"{payload['id']}.json")
+    if os.path.exists(meta):
+        os.remove(meta)
     _next_try.pop(json_path, None)
     log.info("delivered %s", payload["id"])
 
