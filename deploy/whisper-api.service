@@ -1,0 +1,25 @@
+[Unit]
+Description=Controle Online transcription API (w.controleonline.com)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=whisper
+Group=whisper
+WorkingDirectory=/home/whisper/api-whisper/python
+EnvironmentFile=/home/whisper/api-whisper/.env
+ExecStart=/home/whisper/api-whisper/venv/bin/uvicorn api:app --host 127.0.0.1 --port 8090 --workers 1
+Restart=on-failure
+RestartSec=5
+MemoryMax=300M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindPaths=/home/whisper/api-whisper
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

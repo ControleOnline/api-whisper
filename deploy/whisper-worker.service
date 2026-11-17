@@ -1,0 +1,31 @@
+[Unit]
+Description=Controle Online transcription worker (Whisper)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=whisper
+Group=whisper
+WorkingDirectory=/home/whisper/api-whisper/python
+EnvironmentFile=/home/whisper/api-whisper/.env
+Environment=HOME=/home/whisper/api-whisper
+Environment=XDG_CACHE_HOME=/home/whisper/api-whisper/var/cache
+ExecStart=/home/whisper/api-whisper/venv/bin/python worker.py
+Restart=on-failure
+RestartSec=10
+# Small shared server: the worker can never take the box down.
+MemoryHigh=900M
+MemoryMax=1200M
+CPUQuota=150%
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindPaths=/home/whisper/api-whisper
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
