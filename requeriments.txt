@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-openai-whisper
-torch
-watchdog
-requests
-python-dotenv
-python-multipart
