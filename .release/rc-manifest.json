@@ -1,0 +1,13 @@
+{
+  "version": "1.1.0",
+  "rc": 1,
+  "branch": "rc/1.1.0-rc.1",
+  "baseMaster": "6b03fd2405a09ed9be9c8ba3db6029c6e3e99c46",
+  "tasks": [
+    10
+  ],
+  "frozen": true,
+  "repositories": {
+    "ControleOnline/api-whisper": "84a919d3aab7e6763e0dde962736e9c7d2dbcd04"
+  }
+}
